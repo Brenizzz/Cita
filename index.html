@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Quieres salir conmigo?</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ecd9de; --card:#e9f4f1; --ink:#4a1f2e; --rose:#d9778c; --rose-d:#c25f76;
+  --purple:#9b7bc2; --muted:#6b5560;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:'Lora',Georgia,serif; color:var(--ink);
+  background:radial-gradient(circle at 30% 20%,#f3e3e7,var(--bg) 70%);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.petal{position:fixed;top:-20px;border-radius:50%;background:#e58aa0;opacity:.7;pointer-events:none;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh) translateX(30px)}}
+.card{
+  position:relative;width:min(92vw,440px);min-height:260px;background:var(--card);
+  border-radius:22px;padding:34px 30px 30px;text-align:center;
+  box-shadow:0 18px 40px rgba(120,60,80,.18);
+  animation:pop .45s ease both;
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+h1{font-size:1.5rem;line-height:1.25;margin:.2rem 0 .7rem;font-weight:700}
+p{margin:.3rem 0 1rem;color:var(--muted);font-size:.9rem}
+.avatar{width:92px;height:92px;border-radius:20px;overflow:hidden;margin:0 auto 18px;background:#bcc9c6}
+.avatar svg,.avatar img{width:100%;height:100%;display:block;object-fit:cover}
+.icon{width:70px;height:70px;border-radius:18px;margin:0 auto 18px;background:#d8402a;display:grid;place-items:center;font-size:2.2rem}
+.btn{
+  font:inherit;font-size:.9rem;color:#fff;background:var(--rose);border:0;border-radius:999px;
+  padding:12px 26px;cursor:pointer;transition:transform .15s,background .15s;
+  box-shadow:0 4px 10px rgba(194,95,118,.3);
+}
+.btn:hover{background:var(--rose-d);transform:translateY(-1px)}
+.btn.no{background:var(--purple);box-shadow:0 4px 10px rgba(110,80,160,.3)}
+.btn.grey{background:#a9b8b4;box-shadow:none}
+.link{background:none;border:0;font:inherit;font-size:.85rem;color:var(--muted);cursor:pointer;margin-top:12px}
+.row{position:relative;height:90px;margin-top:6px}
+.row .btn{position:absolute;top:30px}
+#yes{left:calc(50% - 90px)} #no{left:calc(50% + 10px)}
+label{display:block;text-align:left;font-weight:700;font-size:.8rem;margin:12px 0 6px}
+input,select{
+  width:100%;font:inherit;font-size:.85rem;padding:11px 12px;border:1px solid #c9d6d2;
+  border-radius:8px;background:#f1f8f6;color:var(--ink);
+}
+.card .btn.go{margin-top:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.opt{font:inherit;font-weight:700;font-size:.85rem;padding:13px;background:#f1f8f6;border:1px solid #c9d6d2;border-radius:8px;cursor:pointer;color:var(--ink);transition:.15s}
+.opt:hover{background:#fff;border-color:var(--rose);transform:translateY(-1px)}
+.eyebrow{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+.price{font-size:2rem;font-weight:700;margin:6px 0 14px}
+.note{background:#dde9e6;border-radius:8px;padding:12px;font-size:.78rem;color:var(--muted);margin-bottom:16px}
+.foot{position:fixed;bottom:12px;left:0;right:0;text-align:center;font-size:.7rem;color:#8a6a75}
+canvas{position:fixed;inset:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="foot">Hecho con amor 🌸</div>
+<canvas id="fx"></canvas>
+
+<script>
+// pétalos
+for(let i=0;i<14;i++){
+  const p=document.createElement('div'),s=4+Math.random()*5;
+  p.className='petal';p.style.cssText=`left:${Math.random()*100}vw;width:${s}px;height:${s}px;animation-duration:${9+Math.random()*10}s;animation-delay:${-Math.random()*15}s`;
+  document.body.appendChild(p);
+}
+
+const pug=`<svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#b9c8c5"/>
+<path d="M20 100c2-18 14-26 30-26s28 8 30 26z" fill="#8fb0c4"/>
+<ellipse cx="50" cy="52" rx="26" ry="28" fill="#2b2626"/>
+<path d="M26 34c-10 0-14 12-8 22 4-2 8-8 8-22zM74 34c10 0 14 12 8 22-4-2-8-8-8-22z" fill="#1e1a1a"/>
+<ellipse cx="50" cy="62" rx="14" ry="11" fill="#3a3333"/>
+<circle cx="39" cy="46" r="7" fill="#f4efe8"/><circle cx="61" cy="46" r="7" fill="#f4efe8"/>
+<circle cx="40" cy="47" r="3.5" fill="#1a1414"/><circle cx="60" cy="47" r="3.5" fill="#1a1414"/>
+<ellipse cx="50" cy="58" rx="5" ry="3.5" fill="#111"/>
+<path d="M44 68q6 3 12 0" stroke="#111" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`;
+const avatar=()=>`<div class="avatar">${pug}</div>`;
+
+const state={dia:'',hora:'',comida:''};
+const app=document.getElementById('app');
+const show=html=>{app.innerHTML=`<div class="card">${html}</div>`};
+
+function s1(){
+  show(`${avatar()}<h1>🌸 ¿Quieres salir conmigo? 🌸</h1>
+  <div class="row"><button class="btn" id="yes">Sí ♥</button><button class="btn no" id="no">No 🐾</button></div>`);
+  const no=document.getElementById('no'),row=no.parentElement;
+  const dodge=()=>{
+    const r=row.getBoundingClientRect(),c=app.firstChild.getBoundingClientRect();
+    const x=(Math.random()-.5)*(c.width-130),y=(Math.random()*40)-10;
+    no.style.left=`calc(50% + ${x}px)`;no.style.top=`${30+y}px`;
+  };
+  no.addEventListener('mouseenter',dodge);
+  no.addEventListener('touchstart',e=>{e.preventDefault();dodge()},{passive:false});
+  no.addEventListener('click',dodge);
+  document.getElementById('yes').onclick=s2;
+}
+function s2(){
+  show(`<div class="icon">🧀</div><h1>Gracias por aceptarme la cita</h1>
+  <p>Ya me estaba preparando para que dijeras que no 🥲</p>
+  <button class="btn" id="n">¡Bueno, bueno! →</button>`);
+  n.onclick=s3;
+}
+function s3(){
+  const horas=[];
+  for(let h=12;h<=21;h++){for(const m of [0,30]){if(h===21&&m)continue;
+    const hh=h>12?h-12:h;horas.push(`${hh}:${m?'30':'00'} p. m.`)}}
+  const hoy=new Date().toISOString().slice(0,10);
+  show(`<h1>¿Que dia tienes tiempo libre?</h1>
+  <label>Elige un día 🗓️</label><input type="date" id="d" min="${hoy}" value="${state.dia}">
+  <label>¿A qué hora? ⏰</label>
+  <select id="h"><option value="">Selecciona una hora...</option>${horas.map(x=>`<option ${x===state.hora?'selected':''}>${x}</option>`).join('')}</select>
+  <button class="btn go" id="n">¡Confirmemos la cita! ♥</button>`);
+  n.onclick=()=>{
+    if(!d.value||!h.value){ (d.value?h:d).focus(); (d.value?h:d).style.borderColor='#d9778c'; return }
+    state.dia=d.value;state.hora=h.value;s4();
+  };
+}
+function s4(){
+  const o=['Pizza','Makis','Hamburguesas','Pasta','Cafeteria','Ramen'];
+  show(`<h1>¿Qué se te antoja? 🍽️✨</h1><p>Elige lo que te apetece</p>
+  <div class="grid">${o.map(x=>`<button class="opt">${x}</button>`).join('')}</div>`);
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{state.comida=b.textContent;s5()});
+}
+function s5(){
+  const hora=state.hora.replace(':00','').replace(' p. m.','');
+  show(`<h1>Me alegra que no hayas dicho que no. Alístate para las ${hora}; paso por ti 🚗</h1>
+  <p>P. D. La gente normal manda mensajes. Yo te hice un sitio web porque me encantas. No es para tanto.</p>
+  <button class="btn" id="n">Está bien, acepto 💝</button>`);
+  n.onclick=s7;
+}
+function s7(){
+  const f=new Date(state.dia+'T12:00').toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
+  show(`<h1>¡Cita confirmada! 🎉</h1>
+  <p><b>${f}</b> a las <b>${state.hora}</b><br>Plan: <b>${state.comida}</b> 🍴</p>
+  <p>Nos vemos pronto 🌸</p>`);
+  confetti();
+}
+function confetti(){
+  const c=document.getElementById('fx'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+  const ps=Array.from({length:120},()=>({x:Math.random()*c.width,y:-Math.random()*c.height,v:2+Math.random()*3,s:5+Math.random()*6,c:['#d9778c','#9b7bc2','#f2b8c6','#fff'][Math.random()*4|0]}));
+  let t=0;(function f(){x.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.y+=p.v;p.x+=Math.sin(p.y/30);x.fillStyle=p.c;x.fillRect(p.x,p.y,p.s,p.s)});
+    if(t++<400)requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})();
+}
+s1();
+</script>
+</body>
+</html>
